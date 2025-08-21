@@ -1,25 +1,22 @@
-# April 15, 2025
-# Code to run models to get decathlon simulations, explicitly set the beta coefficients.
-# dependencies: tidyverse, readxl, rstan, rlist, tidyselect, patchwork, forcats
+# Aug 21, 2025
+# Code to run models to get decathlon simulations, with explicitly set beta coefficients from make_gen_data_manual.R. Goal: identify coverage of event coefficients, without a focus on prediction.
+
 set.seed(2)
 library(tidyverse)
 library(readxl)
 library(rstan)
 library(rlist)
 library(tidyselect)
-library(patchwork)
 library(forcats)
-library(mvtnorm)
 
 
-# setwd("~/school/wisconsin/research_repo/decathlon")
-study = "new_stan_sim"
-data_dir = "new_stan_sim/data/"
-script_dir = "new_stan_sim/study/"
-stan_dir = "new_stan_sim/stan_mods/"
+study = "decathlon_simulation"
+data_dir = "decathlon_simulation/data/"
+script_dir = "decathlon_simulation/study/"
+stan_dir = "decathlon_simulation/stan_mods/"
 
 source(paste0(script_dir, "decathlon_funs.R"))
-source(paste0(script_dir, "settings_gen_data_2.R"))
+source(paste0(script_dir, "settings_coverage.R"))
 sim_data_list <- readRDS(paste0(data_dir, "sim_data_list_manual.RData"))
 
 ### simulation settings ###

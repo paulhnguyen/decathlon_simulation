@@ -1,37 +1,27 @@
-# June 2, 2025
-# code to make the simulated data set in the simulated parameter recovery. will produce and save 1 dataset with explicitly determined beta coefficients for use in the study_gen_data_2.R file
+# Aug 21, 2025
+# code to make the simulated data set and save true event coefficients in the simulated parameter recovery. will produce and save 1 dataset with explicitly determined beta coefficients for use in the study_gen_data_2.R file
 
 set.seed(2)
 library(tidyverse)
 library(readxl)
-library(rstan)
-library(rlist)
 library(tidyselect)
 library(patchwork)
 library(forcats)
 library(mvtnorm)
 library(lme4)
 
-setwd("~/school/wisconsin/research_repo/decathlon")
-study = "new_stan_sim"
-data_dir = "new_stan_sim/data/"
-script_dir = "new_stan_sim/study/"
-stan_dir = "new_stan_sim/stan_mods/"
+study = "decathlon_simulation"
+data_dir = "decathlon_simulation/data/"
+script_dir = "decathlon_simulation/study/"
+stan_dir = "decathlon_simulation/stan_mods/"
 
 source(paste0(script_dir, "decathlon_funs.R"))
-source(paste0(script_dir, "settings_gen_data_2.R"))
-
 dec_events <- c("hundred_m", "long_jump", "shot_put",
                 "high_jump", "four_hundred_m", "hurdles",
                 "discus", "pole_vault", "javelin",
                 "fifteen_hundred_m")
 
-online_data_filter <- read_csv(paste0(data_dir,"online_data_filter.csv")) %>%
-  filter(year(dob) > 1950) %>%
-  group_by(name, dob) %>%
-  mutate(athlete_id = cur_group_id())  %>%
-  filter(discus > 2) %>%
-  unique()
+online_data_filter <- read_csv(paste0(data_dir,"online_data_filter.csv")) 
 event_sums <- get_event_sums_df(online_data_filter)
 mean_age <- mean(online_data_filter$age)
 sd_age <- sd(online_data_filter$age)
@@ -73,7 +63,5 @@ for(p in 1:200){
 
 
 
-# saveRDS(sim_df_list, file = "new_stan_sim/data/sim_data_list_manual.RData")
-# sim_data_list <- readRDS(paste0(data_dir, "sim_data_list_manual.RData"))
-# saveRDS(beta_coef_list, file = "new_stan_sim/data/beta_list_sim_manual.RData")
-# sim_beta_coef_list2 <- readRDS(paste0(data_dir, "beta_list_sim_manual.RData"))
+# saveRDS(sim_df_list, file = "decathlon_simulation/data/sim_data_list_manual.RData")
+# saveRDS(beta_coef_list, file = "decathlon_simulation/data/beta_list_sim_manual.RData")
