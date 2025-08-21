@@ -20,6 +20,7 @@ source(paste0(script_dir, "settings_coverage.R"))
 sim_data_list <- readRDS(paste0(data_dir, "sim_data_list_manual.RData"))
 
 ### simulation settings ###
+# if running for a single iteration, comment args = commandArgs(TRUE) out, and manually set args to 0, 1, ... , 799
 args = commandArgs(TRUE)
 job_id = as.numeric(args[1]) + 1
 
@@ -32,13 +33,12 @@ dec_events <- c("hundred_m", "long_jump", "shot_put",
                 "high_jump", "four_hundred_m", "hurdles",
                 "discus", "pole_vault", "javelin",
                 "fifteen_hundred_m")
+
+# make sure to run make_gen_data_manual.R to generate data. already standardized.
 sim_data <- sim_data_list[[iter]]
 event_sums <- get_event_sums_df(sim_data)
-
-
-# dec_data_standard <- standardize_decathlon_data(sim_data,  event_sums)
 dec_data_standard <- sim_data
-# no pred
+# no predictions, so set arbritrary age, athlete id, vectors
 age_vec <- c(20, 20)
 print(c(type, comp, iter))
 athlete_id <- rep(0, length(age_vec))

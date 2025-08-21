@@ -1,8 +1,4 @@
-# this document runs and saves the sims that are used for generating simulations for - all athletes, specifically for EATON and WILLIAMS. I will try and put all the code for the sims used in the generation of the figures in the paper. current date is Auguest 13, 2025. Some code is copied from make_age_curves_graphs_paper.R. this document is only for the simulation of data. for analyses, see make_age_curves_graphs_paper, find_maxima_ind, and look_at_posterior_correlation.
-
-
-
-
+# this document runs and saves the sims that are used for generating simulations for - all athletes, specifically for EATON and WILLIAMS. Date: August 13, 2025. Some code is copied from make_age_curves_graphs_paper.R. this document is only for the simulation of data. for analyses, see make_age_curves_graphs_paper, find_maxima_ind, and look_at_posterior_correlation.
 set.seed(2)
 library(tidyverse)
 library(readxl)
