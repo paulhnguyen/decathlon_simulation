@@ -1,5 +1,5 @@
 setwd("~/school/wisconsin/research_repo/decathlon/new_stan_sim")
-results_dir = "../results/coverage_table_results/"
+results_dir = "../results/coverage_results/"
 data_dir = "data/"
 
 library(tidyverse)
