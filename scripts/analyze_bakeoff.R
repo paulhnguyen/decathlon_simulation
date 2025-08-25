@@ -1,19 +1,14 @@
-setwd("~/school/wisconsin/research_repo/decathlon/new_stan_sim")
-dir = "../results/mse_table_pred_bakeoff/"
+# This file assumes you have a results directory, containing the results from from running the bakeoff study.
+dir = "../../results/mse_table_pred_bakeoff/"
 
 library(tidyverse)
 library(knitr)
 library(ggplot2)
 library(patchwork)
-source("study/decathlon_funs.R")
+source("../study/decathlon_funs.R")
 
-data_dir = "data/"
-online_data_filter <- read_csv(paste0(data_dir,"online_data_filter.csv")) %>%
-  filter(year(dob) > 1950,
-         discus > 2) %>%
-  group_by(name, dob) %>%
-  mutate(athlete_id = cur_group_id()) %>%
-  unique()
+data_dir = "../data/"
+online_data_filter <- read_csv(paste0(data_dir,"online_data_filter.csv")) 
 event_sums <- get_event_sums_df(online_data_filter)
 
 ### load results ###
@@ -128,9 +123,6 @@ ggplot(data = gen_results %>%
   theme_bw()+
   scale_fill_brewer(type = "qual") 
 
-ggsave("../writing/decathlon_manu/figures/general_point_boxplot.png", width = 6, height = 4,
-       units = "in")
-
 gen_results %>%
   filter(event == "points") %>%
   group_by(comp, type, prior) %>%
@@ -153,19 +145,6 @@ ggplot(data = future_results %>%
 ggsave("../writing/decathlon_manu/figures/tail_point_boxplot.png", width = 6, height = 4,
        units = "in")
 
-dec_events <- c("hundred_m", "long_jump", "shot_put",
-                "high_jump", "four_hundred_m", "hurdles",
-                "discus", "pole_vault", "javelin",
-                "fifteen_hundred_m")
-test <- gen_results %>%
-  filter(prior == "none",
-         type == "cubic") %>%
-  group_by(event, comp, prior, type)  %>%
-  summarize(med_smse = median(smse)) %>%
-  arrange(med_smse) %>%
-  pivot_wider(names_from = comp,
-              values_from = med_smse) %>%
-  mutate(diff = compositional - simple)
 # we have confirmed they are not identical
 ggplot(data = gen_results %>%
          filter(event == "fifteen_hundred_m"),
@@ -266,59 +245,6 @@ ggplot(data = future_results %>%
   scale_fill_brewer(type = "qual") 
 
 
-# 
-# denom_df <- results %>%
-#   select(event, pred_type, iter) %>%
-#   unique() %>%
-#   mutate(denom = NA)
-# 
-# load(paste0(data_dir, "test_split_list_athlete.RData"))
-# load(paste0(data_dir, "test_split_list_future.RData"))
-# load(paste0(data_dir, "test_split_list_general.RData"))
-# for (i in 1:nrow(denom_df)) {
-#   pred_type_i <- denom_df$pred_type[i]
-#   iter_i <- denom_df$iter[i]
-#   event_i <- denom_df$event[i] 
-#   if (pred_type_i == "general") {
-#     test_index = test_split_list[[iter_i]]
-#   } else if (pred_type_i == "athlete") {
-#     test_index = test_split_list_athlete[[iter_i]]
-#   } else if (pred_type_i == "future") {
-#     test_index = test_split_list_future[[iter_i]]
-#   }
-#   
-#   
-#   Y_test <- online_data_filter[test_index,][[event_i]]
-#   Y_train <- online_data_filter[-test_index,][[event_i]]
-#   denom <- mean( (Y_test - mean(Y_train))^2 )
-#   denom_df$denom[i] <- denom
-# }
-# 
-# for (i in 1:nrow(results)) {
-#   iter_i <- results$iter[i]
-#   pred_type_i <- results$pred_type[i]
-#   event_i <- results$event[i] 
-#   denom <- denom_df %>%
-#     filter(event  == event_i,
-#            iter == iter_i,
-#            pred_type == pred_type_i) %>%
-#     select(denom) %>%
-#     pull()
-#   results$denom[i] <- denom
-# }
-# results <- results %>%
-#   select(-c(smse, sd)) %>%
-#   mutate(smse = (mse) / denom)
-# 
-# results_points <- results %>%
-#   filter(event == "points") 
-# results_points %>%
-#   group_by(pred_type,
-#            model_type,
-#            prior,
-#            event) %>%
-#   summarize(n = n(),
-#             mean_smse = mean(smse))
 
 
 results_filtered <- results %>%
@@ -338,6 +264,10 @@ summary(results_filtered_simp)
 results_combined <- rbind(results_filtered_comp, results_filtered_simp) 
 
 target <- c("baseline none", "simple none", "simple moment", "compositional none", "compositional moment")
+
+
+# making tables with SMSE's -----------------------------------------------
+
 
 
 general_table_cube <- results  %>%
@@ -432,7 +362,7 @@ names(future_table_spline) <- c("model prior" , "f(age)", "100m" , "LJ",
 
 athlete_table <- results  %>%
   filter(pred_type == "athlete") %>%
-  mutate(model_prior = paste0(model_type, " ", prior)) %>%
+  mutate(model_prior = paste0(comp, " ", prior)) %>%
   group_by(event,
            model_prior
   ) %>%

@@ -5,7 +5,11 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-## Coverage Example
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, error = FALSE) 
+```
+
+### Coverage Example
 
 To demonstrate one iteration of the coverage experiment, we will fit one instance of the cubic compositional model to one version of simulated data where we know the true event coefficients. For the example, we'll run the simulation with much smaller iterations (100) for faster compilation (normally 2000). The majority of the code is taken from study_coverage.R. You may need to run study/make_gen_data_manual.R to produce the simulated datasets.
 
@@ -19,10 +23,10 @@ library(tidyselect)
 library(forcats)
 
 
-study = "decathlon_simulation"
-data_dir = "decathlon_simulation/data/"
-script_dir = "decathlon_simulation/study/"
-stan_dir = "decathlon_simulation/stan_mods/"
+study = "../../decathlon_simulation"
+data_dir = "../../decathlon_simulation/data/"
+script_dir = "../../decathlon_simulation/study/"
+stan_dir = "../../decathlon_simulation/stan_mods/"
 
 source(paste0(script_dir, "decathlon_funs.R"))
 source(paste0(script_dir, "settings_coverage.R"))
@@ -31,7 +35,7 @@ sim_data_list <- readRDS(paste0(data_dir, "sim_data_list_manual.RData"))
 
 In the study, we use a high performance computing cluster. We will manually set a job id for this example.
 
-```{r, cache = T}
+```{r, cache = T, warning = FALSE, message = FALSE, error = FALSE, results = 'hide'}
 args = 2
 job_id = as.numeric(args[1]) + 1
 
