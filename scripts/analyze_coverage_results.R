@@ -1,11 +1,12 @@
+# Date: August 28, 2025. This script analyzes the results from the coverage experiment. The script produces tables demonstrating the coverage for the compositional model.
 # This file assumes you have a results directory, containing the results from from running the coverage study.
-results_dir = "../results/coverage_results/"
-data_dir = "data/"
+# results_dir = "../../results/coverage_results/"
+data_dir = "../data/"
 
 library(tidyverse)
 library(knitr)
 library(ggplot2)
-source("study/decathlon_funs.R")
+source("../study/decathlon_funs.R")
 dec_events <- c("hundred_m", "long_jump", "shot_put",
                 "high_jump", "four_hundred_m", "hurdles",
                 "discus", "pole_vault", "javelin",
@@ -42,10 +43,11 @@ for (i in 1:nrow(results)) {
   beta_coef <- sim_beta_coef_list[[target_id]][predictor_id]
   results$true_coef[i] <- beta_coef
 }
+# check if true parameter included
 results <- results %>%
   mutate(cov_check = (true_coef < ub) & (true_coef > lb))
 
-
+# calculate proportion of exp. where true parameter covered by interval.
 comp_prop <- results %>%
   filter(comp == "compositional",
          type != "spline") %>%
@@ -62,13 +64,7 @@ comp_prop_wide <- comp_prop %>%
               values_from = prop) %>%
   arrange(factor(predictor, levels = c('age', 'age2', 'age3', dec_events[1:9]))) %>%
   select(all_of(c('predictor', dec_events)))
-simple_prop_wide <- simple_prop %>%
-  ungroup() %>%
-  select(-type, -comp) %>%
-  pivot_wider(names_from = target,
-              values_from = prop) %>%
-  arrange(factor(predictor, levels = c('age', 'age2', 'age3', dec_events[1:9]))) %>%
-  select(all_of(c('predictor', dec_events)))
+
   
 
 # producing table in paper

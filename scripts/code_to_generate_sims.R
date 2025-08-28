@@ -1,4 +1,4 @@
-# this document runs and saves the sims that are used for generating simulations for - all athletes, specifically for EATON and WILLIAMS. Date: August 13, 2025. Some code is copied from make_age_curves_graphs_paper.R. this document is only for the simulation of data. for analyses, see make_age_curves_graphs_paper, find_maxima_ind, and look_at_posterior_correlation.
+# this document runs and saves the sims that are used for generating simulations for - all athletes, specifically for EATON and WILLIAMS. Date: August 28, 2025. Some code is copied from make_age_curves_graphs_paper.R. this document is only for the simulation of data. for analyses, see make_age_curves_graphs_paper, find_maxima_ind, and look_at_posterior_correlation.
 set.seed(2)
 library(tidyverse)
 library(readxl)
@@ -10,21 +10,15 @@ library(forcats)
 library(mvtnorm)
 library(knitr)
 
-setwd("~/school/wisconsin/research_repo/decathlon")
+
 study = "new_stan_sim"
 data_dir = "new_stan_sim/data/"
 script_dir = "new_stan_sim/study/"
 stan_dir = "new_stan_sim/stan_mods/"
 
 source(paste0(script_dir, "decathlon_funs.R"))
-# source(paste0(script_dir, "settings_gen_data.R"))
 
-online_data_filter <- read_csv(paste0(data_dir,"online_data_filter.csv")) %>%
-  filter(year(dob) > 1950,
-         discus > 2) %>%
-  group_by(name, dob) %>%
-  mutate(athlete_id = cur_group_id()) %>%
-  unique()
+online_data_filter <- read_csv(paste0(data_dir,"online_data_filter.csv"))
 event_sums <- get_event_sums_df(online_data_filter)
 dec_events <- c("hundred_m", "long_jump", "shot_put",
                 "high_jump", "four_hundred_m", "hurdles",
@@ -122,4 +116,3 @@ saveRDS(object = simple_sim_gen, file = "results/simple_sim_for_all_athletes.RDa
 saveRDS(object = comp_sim_gen, file = "results/comp_sim_for_all_athletes.RData")
 
 
-test <- readRDS("results/comp_sim_for_all_athletes.RData")

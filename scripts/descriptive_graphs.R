@@ -1,4 +1,4 @@
-# Aug 22, 2025
+# Aug 28, 2025
 # Code to make descriptive graphs for data section in paper.
 
 
@@ -8,19 +8,13 @@ library(readxl)
 library(knitr)
 
 
-study = "decathlon_simulation"
-data_dir = "decathlon_simulation/data/"
-script_dir = "decathlon_simulation/study/"
-stan_dir = "decathlon_simulation/stan_mods/"
+study = "../study"
+data_dir = "../data/"
+script_dir = "../study/"
 
 source(paste0(script_dir, "decathlon_funs.R"))
 
-online_data_filter <- read_csv(paste0(data_dir,"online_data_filter.csv")) %>%
-  filter(year(dob) > 1950,
-         discus > 2) %>%
-  group_by(name, dob) %>%
-  mutate(athlete_id = cur_group_id()) %>%
-  unique()
+online_data_filter <- read_csv(paste0(data_dir,"online_data_filter.csv")) 
 event_sums <- get_event_sums_df(online_data_filter)
 dec_events <- c("hundred_m", "long_jump", "shot_put",
                 "high_jump", "four_hundred_m", "hurdles",
@@ -38,13 +32,11 @@ dec_data_standard <- standardize_decathlon_data(online_data_filter,
 ggplot(online_data_filter, mapping = aes(x = points)) + geom_histogram(color = "white") +
   theme_bw() +
   labs(x = "Points", y = "Count", title = "Distribution of points")
-ggsave("writing/decathlon_manu/figures/point_hist.png", width = 6, height = 4,
-       units = "in")
+
 ggplot(online_data_filter, mapping = aes(x = age)) + geom_histogram(color = "white") +
   theme_bw() +
   labs(x = "Age", y = "Count", title = "Distribution of ages")
-ggsave("writing/decathlon_manu/figures/age_hist.png", width = 6, height = 4,
-       units = "in")
+
 target <- c("age", dec_events, "points")
 
 d_table <- online_data_filter %>%

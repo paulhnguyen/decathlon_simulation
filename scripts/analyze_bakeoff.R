@@ -1,5 +1,7 @@
+# Date: August 28, 2025. This script analyzes the results from the decathlon bakeoff. The data was split into 10 training/testing splits, and the standardized MSE was calculated for each model and model granularity combination. The script produces boxplots demonstrating the SMSE for each model, and the script also generates the tables for details in each event performance.
+
 # This file assumes you have a results directory, containing the results from from running the bakeoff study.
-dir = "../../results/mse_table_pred_bakeoff/"
+# dir = "../../results/mse_table_pred_bakeoff/"
 
 library(tidyverse)
 library(knitr)
@@ -19,7 +21,7 @@ loadRData <- function(filename) {
   get(ls()[ls() != "filename"])
 }
 
-# gets names of all the files in dir
+# gets names of all the files in dir and read results
 files = stringr::str_c(dir, list.files(dir), sep = "")
 results <- read_csv(files[1]) %>%
   mutate(pred_type = "athlete")
@@ -36,6 +38,7 @@ for (i in 2:length(files)) {
             mutate(pred_type = pred_type))
 }
 
+# check that we have all the results
 results %>%
   group_by(pred_type) %>%
   filter(event == "points") %>%
@@ -123,10 +126,7 @@ ggplot(data = gen_results %>%
   theme_bw()+
   scale_fill_brewer(type = "qual") 
 
-gen_results %>%
-  filter(event == "points") %>%
-  group_by(comp, type, prior) %>%
-  summarize(mean_smse = mean(smse))
+
 
 ggplot(data = future_results %>%
          filter(event == "points",
@@ -142,10 +142,7 @@ ggplot(data = future_results %>%
   theme_bw()+
   scale_fill_brewer(type = "qual") 
 
-ggsave("../writing/decathlon_manu/figures/tail_point_boxplot.png", width = 6, height = 4,
-       units = "in")
 
-# we have confirmed they are not identical
 ggplot(data = gen_results %>%
          filter(event == "fifteen_hundred_m"),
        mapping = aes(x = smse,
@@ -157,7 +154,7 @@ ggplot(data = gen_results %>%
        y = "Model",
        fill = "Open-Event Data",
        linetype = "f(age)",
-       title = "SMSE's for predicting 100m by model") +
+       title = "SMSE's for predicting 1500m by model") +
   theme_bw()+
   scale_fill_brewer(type = "qual") 
 
