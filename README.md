@@ -14,4 +14,4 @@ The *study* folder contains scripts necessary for model evaluation. Importantly,
 
 ## Scripts
 
-The *scripts* folder contains code relevant to the analysis of the experiments and simulations. 
+The *scripts* folder contains code relevant to the analysis of the experiments and simulations. We study the coverage and the predictive performance on held-out test sets of each model. We also analyze the optimal ages for each decathlon event. This folder also contains code to visualize these results.
