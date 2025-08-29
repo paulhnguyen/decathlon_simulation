@@ -25,7 +25,7 @@ model {
   beta1 ~ normal(0, 1);
   beta2 ~ normal(0, 1);
   beta3 ~ normal(0, 1);
-  mu_alpha ~ normal(0, 10);
+  mu_alpha ~ normal(0, 1);
   sigma_alpha_decathlon ~ inv_gamma(2, 1);
   sigma_decathlon ~ inv_gamma(2, 1);
 

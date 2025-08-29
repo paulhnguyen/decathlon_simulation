@@ -31,10 +31,10 @@ parameters {
 
 model {
   // Priors
-  beta1 ~ normal(0, 5);
-  beta2 ~ normal(0, 2);
+  beta1 ~ normal(0, 1);
+  beta2 ~ normal(0, 1);
   beta3 ~ normal(0, 1);
-  mu_alpha ~ normal(0, 4); # points have been standardized already so this is a reasonable prior
+  mu_alpha ~ normal(0, 1); # points have been standardized already so this is a reasonable prior
   sigma_alpha_decathlon ~ inv_gamma(2, 1);
   sigma_decathlon ~ inv_gamma(2, 1);
 
