@@ -53,12 +53,8 @@ We use the following table and point formulae, given by World Athletics. https:/
 The formula for calculating points for each individual event is given below:\
 
 $$
-\text{Points} = 
-\begin{cases}
-        a \cdot (b-x)^c& \text{if track event} \\
-    
-        a \cdot (x-b)^c & \text{if field event}
-\end{cases}
+\text{Points} =  a \cdot (b-x)^c \text{ if track event, else} \\
+\text{Points} =  a \cdot (b-x)^c \text{ if track event}
 $$
 
 where $a$, $b$, and $c$ are given below, and $x$ is the athlete's time, distance, or height.
