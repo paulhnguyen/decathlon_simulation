@@ -44,7 +44,7 @@ In the compositional models, we take advantage of the fact that the order of eve
 Unlike the simple models, where we model individual events independently, in our compositional model, we model individual events using age *and all previous events*.
 
 $$
-Y_{i, j, e} = \alpha_{i,e} + \sum_d \beta_{d,e} \cdot \phi_d(X_{{age, i,j}}) + \sum_{m = 1}^{e-1} \gamma_{m,e} \cdot Y_{i,m}  + \epsilon_{i,j,e}, \quad \epsilon_{i,j,e} \sim N(0, \sigma_e^2) 
+Y_{i, j, e} = \alpha_{i,e} + \sum_d \beta_{d,e} \cdot \phi_d(X_{{age, i,j}}) + \sum_{m = 1}^{e-1} \gamma_{m,e} \cdot Y_{i,j,m}  + \epsilon_{i,j,e}, \quad \epsilon_{i,j,e} \sim N(0, \sigma_e^2) 
 $$
 $$
 P_{i,j} = \sum_{e = 1}^{10} G_e(Y_{i,j,e})
