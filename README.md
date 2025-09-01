@@ -15,6 +15,7 @@ Below, we briefly describe the baseline, simple, and compositional models.
 #### Baseline
 
 Let $i$ denote the athlete, and $j$ the decathlon observation. For each decathlon $j$, we observe the age of the athlete, vector of events, ${X}_{i,j}$, and total number of points, $P_{i,j}$. We standardize each variable to have zero mean and standard deviation of one. We can now directly model total decathlon points with our baseline model, using only age as our sole covariate:
+
 $$
 Y = \beta_{0}(X) + \beta_{1}(X)Z_{1} + \cdots + \beta_{R}Z_{R} + \sigma \epsilon; \epsilon \sim N(0,1),
 $$
