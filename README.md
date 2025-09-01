@@ -14,7 +14,7 @@ Below, we briefly describe the baseline, simple, and compositional models.
 
 #### Baseline
 
-Let $i$ denote the athlete, and $j$ the decathlon observation. For each decathlon $j$, we observe the age of the athlete, vector of events, ${X}_{i,j}$, and total number of points, $P_{i,j}$. We standardize each variable to have zero mean and standard deviation of one. We can now directly model total decathlon points with our baseline model, using only age as our sole covariate:
+Let $i$ denote the athlete, and $j$ the decathlon observation. For each decathlon $j$, we observe the age of the athlete, vector of events, $X_{i,j}$, and total number of points, $P_{i,j}$. We can now directly model total decathlon points with our baseline model, using only age as our sole covariate:
 
 $$
 P_{i,j} = \alpha_i + \sum_d \beta_d \cdot \phi_d(X_{{age, i,j}})  + \epsilon_{i,j}, \quad \epsilon_{i,j} \sim N(0, \sigma^2)
@@ -41,7 +41,7 @@ Now, $\alpha_{i,e}$ represents a random intercept for each athlete specific to e
 #### Compositional
 
 In the compositional models, we take advantage of the fact that the order of events in the decathlon is fixed and predetermined. 
-Unlike the simple models, where we model individual events independently, in our compositional model, we model individual events using age \emph{and all previous events}.\
+Unlike the simple models, where we model individual events independently, in our compositional model, we model individual events using age *and all previous events*.
 
 $$
 Y_{i, j, e} = \alpha_{i,e} + \sum_d \beta_{d,e} \cdot \phi_d(X_{{age, i,j}}) + \sum_{m = 1}^{e-1} \gamma_{m,e} \cdot Y_{i,m}  + \epsilon_{i,j,e}, \quad \epsilon_{i,j,e} \sim N(0, \sigma_e^2) 
@@ -52,7 +52,7 @@ $$
 
 #### Point Calculation.
 
-We use the following table and point formulae, given by World Athletics. https://worldathletics.org/about-iaaf/documents/technical-information
+We use the following [table](https://worldathletics.org/about-iaaf/documents/technical-information) and point formulae, given by World Athletics. 
 
 The formula for calculating points for each individual event is given below:
 
