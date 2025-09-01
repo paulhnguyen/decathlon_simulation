@@ -17,11 +17,7 @@ Below, we briefly describe the baseline, simple, and compositional models.
 Let $i$ denote the athlete, and $j$ the decathlon observation. For each decathlon $j$, we observe the age of the athlete, vector of events, ${X}_{i,j}$, and total number of points, $P_{i,j}$. We standardize each variable to have zero mean and standard deviation of one. We can now directly model total decathlon points with our baseline model, using only age as our sole covariate:
 
 $$
-Y = \beta_{0}(X) + \beta_{1}(X)Z_{1} + \cdots + \beta_{R}Z_{R} + \sigma \epsilon; \epsilon \sim N(0,1),
-$$
-
-$$
-P_{i,j} = \alpha_i + \sum_d \beta_d \cdot \phi_d(X_{{age}_{i,j}})  + \epsilon_{i,j}, \quad \epsilon_{i,j} \sim N(0, \sigma^2)
+P_{i,j} = \alpha_i + \sum_d \beta_d \cdot \phi_d(X_{{age, i,j}})  + \epsilon_{i,j}, \quad \epsilon_{i,j} \sim N(0, \sigma^2)
 $$
 
 with $\alpha_i$ a random intercept for each athlete. We let $\phi$ be a fixed basis. In our experiments, we test both a cubic spline basis with interior knots placed at age deciles and a simple cubic polynomial basis.
@@ -34,7 +30,7 @@ For each of the ten decathlon events, we model individual event scores using $X_
 We then calculate the number of points earned for a given event score with $G_e(\cdot)$, whose formula is described later. We sum the points earned for each event to determine the overall decathlon score. 
 
 $$
-Y_{i, j, e} = \alpha_{i,e} + \sum_d \beta_{d,e} \cdot \phi_{d}(X_{{age}_{i,j}})  + \epsilon_{i,j,e}, \quad \epsilon_{i,j,e} \sim N(0, \sigma_e^2) \\
+Y_{i, j, e} = \alpha_{i,e} + \sum_d \beta_{d,e} \cdot \phi_d(X_{{age, i,j}})  + \epsilon_{i,j,e}, \quad \epsilon_{i,j,e} \sim N(0, \sigma_e^2) \\
 P_{i,j} = \sum_{e = 1}^{10} G_e(Y_{i,j,e})
 $$
 
@@ -46,7 +42,7 @@ In the compositional models, we take advantage of the fact that the order of eve
 Unlike the simple models, where we model individual events independently, in our compositional model, we model individual events using age \emph{and all previous events}.\
 
 $$
-Y_{i, j, e} = \alpha_{i,e} + \sum_d \beta_{d,e} \cdot \phi_{d}(X_{{age}_{i,j}}) + \sum_{m = 1}^{e-1} \gamma_{m,e} \cdot Y_{i,m}  + \epsilon_{i,j,e}, \quad \epsilon_{i,j,e} \sim N(0, \sigma_e^2) \\
+Y_{i, j, e} = \alpha_{i,e} + \sum_d \beta_{d,e} \cdot \phi_d(X_{{age, i,j}}) + \sum_{m = 1}^{e-1} \gamma_{m,e} \cdot Y_{i,m}  + \epsilon_{i,j,e}, \quad \epsilon_{i,j,e} \sim N(0, \sigma_e^2) \\
 P_{i,j} = \sum_{e = 1}^{10} G_e(Y_{i,j,e})
 $$
 
