@@ -30,7 +30,9 @@ For each of the ten decathlon events, we model individual event scores using $X_
 We then calculate the number of points earned for a given event score with $G_e(\cdot)$, whose formula is described later. We sum the points earned for each event to determine the overall decathlon score. 
 
 $$
-Y_{i, j, e} = \alpha_{i,e} + \sum_d \beta_{d,e} \cdot \phi_d(X_{{age, i,j}})  + \epsilon_{i,j,e}, \quad \epsilon_{i,j,e} \sim N(0, \sigma_e^2) \\
+Y_{i, j, e} = \alpha_{i,e} + \sum_d \beta_{d,e} \cdot \phi_d(X_{{age, i,j}})  + \epsilon_{i,j,e}, \quad \epsilon_{i,j,e} \sim N(0, \sigma_e^2) 
+$$
+$$
 P_{i,j} = \sum_{e = 1}^{10} G_e(Y_{i,j,e})
 $$
 
@@ -42,7 +44,9 @@ In the compositional models, we take advantage of the fact that the order of eve
 Unlike the simple models, where we model individual events independently, in our compositional model, we model individual events using age \emph{and all previous events}.\
 
 $$
-Y_{i, j, e} = \alpha_{i,e} + \sum_d \beta_{d,e} \cdot \phi_d(X_{{age, i,j}}) + \sum_{m = 1}^{e-1} \gamma_{m,e} \cdot Y_{i,m}  + \epsilon_{i,j,e}, \quad \epsilon_{i,j,e} \sim N(0, \sigma_e^2) \\
+Y_{i, j, e} = \alpha_{i,e} + \sum_d \beta_{d,e} \cdot \phi_d(X_{{age, i,j}}) + \sum_{m = 1}^{e-1} \gamma_{m,e} \cdot Y_{i,m}  + \epsilon_{i,j,e}, \quad \epsilon_{i,j,e} \sim N(0, \sigma_e^2) 
+$$
+$$
 P_{i,j} = \sum_{e = 1}^{10} G_e(Y_{i,j,e})
 $$
 
@@ -53,11 +57,11 @@ We use the following table and point formulae, given by World Athletics. https:/
 The formula for calculating points for each individual event is given below:
 
 $$
-\text{Points} =  a \cdot (b-x)^c \text{ if track event, else}
+\text{Points} =  a \cdot (b-x)^c \quad \text{ if track event, else}
 $$
 
 $$
-\text{Points} =  a \cdot (b-x)^c \text{ if track event}
+\text{Points} =  a \cdot (x-b)^c \quad \text{ if field event}
 $$
 
 where $a$, $b$, and $c$ are given below, and $x$ is the athlete's time, distance, or height.
