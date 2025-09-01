@@ -50,10 +50,13 @@ $$
 
 We use the following table and point formulae, given by World Athletics. https://worldathletics.org/about-iaaf/documents/technical-information
 
-The formula for calculating points for each individual event is given below:\
+The formula for calculating points for each individual event is given below:
 
 $$
-\text{Points} =  a \cdot (b-x)^c \text{ if track event, else} \\
+\text{Points} =  a \cdot (b-x)^c \text{ if track event, else}
+$$
+
+$$
 \text{Points} =  a \cdot (b-x)^c \text{ if track event}
 $$
 
