@@ -86,4 +86,23 @@ The *study* folder contains scripts necessary for model evaluation. Importantly,
 
 ## Scripts
 
-The *scripts* folder contains code relevant to the analysis of the experiments and simulations. We study the coverage and the predictive performance on held-out test sets of each model. We also analyze the optimal ages for each decathlon event. This folder also contains code to visualize these results.
+The *scripts* folder contains code relevant to the analysis of the experiments and simulations. We study the coverage and the predictive performance on held-out test sets of each model. We also analyze the optimal ages for each decathlon event. This folder also contains code to visualize these results. For example, we display the age curves for Ashton Eaton and Harrison Williams for the 400m and shot put events below. We also highlight our calculated optimal ages for each event, shaded red for the 400m and shot put.
+
+![age_curve](./images/age_curve_comp.png)
+
+
+| Event         | Mean  | Q25   | Q75   |
+|---------------|-------|-------|-------|
+| 100m          | 24.32 | 24.10 | 24.55 |
+| Long Jump     | 25.24 | 24.90 | 25.60 |
+| Shot Put      | 28.90 | 28.45 | 29.40 |
+| High Jump     | 24.16 | 23.80 | 24.55 |
+| 400m          | 23.58 | 23.35 | 23.85 |
+| 110mH         | 26.08 | 25.80 | 26.40 |
+| Discus Throw  | 29.65 | 29.05 | 30.00 |
+| Pole Vault    | 27.47 | 27.10 | 27.85 |
+| Javelin Throw | 27.16 | 26.60 | 27.75 |
+| 1500m         | 22.72 | 21.85 | 23.35 |
+| Overall       | 26.00 | 24.6  | 27.5  |
+
+
