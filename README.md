@@ -26,7 +26,7 @@ with $\alpha_i$ a random intercept for each athlete. We let $\phi$ be a fixed ba
 
 In our simple models, we predict each event separately and compute total points from the individual predictions. 
 Again, let $i$ denote the athlete, $j$ the decathlon observation, and $e$ the individual event.
-For each of the ten decathlon events, we model individual event scores using $X_{age}$ as a covariate, independent of the other decathlon events.
+For each of the ten decathlon events, we model individual event scores, $Y_{i,j,e}$ using $X_{age}$ as a covariate, independent of the other decathlon events.
 We then calculate the number of points earned for a given event score with $G_e(\cdot)$, whose formula is described later. We sum the points earned for each event to determine the overall decathlon score. 
 
 $$
@@ -54,14 +54,14 @@ $$
 
 We use the following [table](https://worldathletics.org/about-iaaf/documents/technical-information) and point formulae, given by World Athletics. 
 
-The formula for calculating points for each individual event is given below:
+The formula for calculating points for each individual event, $y$, is given below:
 
 $$
-\text{Points} =  a \cdot (b-x)^c \quad \text{ if track event, else}
+\text{Points} =  a \cdot (b-y)^c \quad \text{ if track event, else}
 $$
 
 $$
-\text{Points} =  a \cdot (x-b)^c \quad \text{ if field event}
+\text{Points} =  a \cdot (y-b)^c \quad \text{ if field event}
 $$
 
 where $a$, $b$, and $c$ are given below, and $x$ is the athlete's time, distance, or height.
