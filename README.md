@@ -91,7 +91,7 @@ The *scripts* folder contains code relevant to the analysis of the experiments a
 ![age_curve](./images/age_curve_comp.png)
 
 
-"Optimal" ages for each decathlon event:
+Peak ages for each decathlon event:
 
 | Event         | Mean  | Q25   | Q75   |
 |---------------|-------|-------|-------|
