@@ -1,5 +1,7 @@
 ## Appendix
 
+These results were obtained from running the files located in the scripts folder on a high throughput computing center.
+
 ### Coverage Experiment
 
 The following table contains the coverage results for the experiment with data simulated with known structure. Most linear relationships are well captured, with credible intervals containing the true parameter upwards of 90\% of the time. The model notably misses the shotput (SP) parameter when predicting discus (DT).
