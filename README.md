@@ -86,7 +86,7 @@ The *study* folder contains scripts necessary for model evaluation. Importantly,
 
 ## Scripts
 
-The *scripts* folder contains code relevant to the analysis of the experiments and simulations. We study the coverage (*analyze_coverage_results.R*) and the predictive performance on held-out test sets of each model (*analyze_bakeoff.R*). We also analyze the optimal ages for each decathlon event (*find_maxima_ind.R*). This folder also contains code to visualize these results. For example, we display the age curves for Ashton Eaton and Harrison Williams for the 400m and shot put events below. We also highlight our calculated optimal ages for each event, shaded red for the 400m and shot put.
+The *scripts* folder contains code relevant to the analysis of the experiments and simulations. We study the coverage (*analyze_coverage_results.R*) and the predictive performance on held-out test sets of each model (*analyze_bakeoff.R*). We also analyze the optimal ages for each decathlon event (*find_maxima_ind.R*). The results are transcribed in *appendix_results.md*. This folder also contains code to visualize these results. For example, we display the age curves for Ashton Eaton and Harrison Williams for the 400m and shot put events below. We also highlight our calculated optimal ages for each event, shaded red for the 400m and shot put.
 
 ![age_curve](./images/age_curve_comp.png)
 
