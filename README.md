@@ -107,4 +107,6 @@ Peak ages for each decathlon event:
 | 1500m         | 22.72 | 21.85 | 23.35 |
 | Overall       | 26.00 | 24.6  | 27.5  |
 
+The *analyze_intercepts.R* script will dive deeper into the random intercepts for each event. Here we plot the percentile of selected athletes in the 400m and 1500m.
 
+![intercepts_graph](./images/intercepts_graph.png)

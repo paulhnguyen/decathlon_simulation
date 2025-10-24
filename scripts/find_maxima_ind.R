@@ -21,7 +21,12 @@ stan_dir = "../stan_mods/"
 
 source(paste0(script_dir, "decathlon_funs.R"))
 
-online_data_filter <- read_csv(paste0(data_dir,"online_data_filter.csv")) 
+online_data_filter <- read_csv(paste0(data_dir,"online_data_filter.csv"))  %>%
+  filter(year(dob) > 1950,
+         discus > 2) %>%
+  group_by(name, dob) %>%
+  mutate(athlete_id = cur_group_id()) %>%
+  unique()
 event_sums <- get_event_sums_df(online_data_filter)
 dec_events <- c("hundred_m", "long_jump", "shot_put",
                 "high_jump", "four_hundred_m", "hurdles",
@@ -34,7 +39,7 @@ age_mean <- mean(online_data_filter$age)
 age_sd <- sd(online_data_filter$age)
 
 # run code_to_generate_sims.R to get compositional model simulation. we can generate sims for only some athletes, and not the entire dataset, because the important part for the age curves are the coefficients, which are the same for each athlete. Including other athletes only changes the random intercept. 
-# comp_sim <- read_rds(file = "../../results/comp_sim_for_select_athletes.RData")
+comp_sim <- read_rds(file = "../../results/comp_sim_for_select_athletes.RData")
 
 comp_sim_df <- (comp_sim$sim_events) %>%
   mutate(athlete_id = case_when(athlete <= 111 ~ 91,
@@ -293,5 +298,15 @@ comp_400m_curve <- ggplot()  +
   guides(color = guide_legend(override.aes = list(size = 0.5)),
          fill = guide_legend(override.aes = list(size = 0.5)))
 # xmin and xmax taken from comp_sim_df_long
-comp_shotput_curve / comp_400m_curve
+comp_shotput_curve 
+# ggsave("../../writing/decathlon_manu/figures/shot_put_best_age_curve.png", width = 6, height = 4,
+#        units = "in")
+# ggsave("../../writing/decathlon_manu_cmu_copy/figures/shot_put_best_age_curve.png", width = 6, height = 4,
+#        units = "in")
 
+
+comp_400m_curve
+# ggsave("../../writing/decathlon_manu/figures/400m_best_age_curve.png", width = 6, height = 4,
+#        units = "in")
+# ggsave("../../writing/decathlon_manu_cmu_copy/figures/400m_best_age_curve.png", width = 6, height = 4,
+#        units = "in")

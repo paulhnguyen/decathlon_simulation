@@ -797,6 +797,108 @@ get_comp_cubic_sim <- function(age_vec,
   return(results)
 }
 
+# same model as get_comp_cubic_sim. does not return the simulated age curves, but the model parameters, so we can remove the simulation aspect.
+get_comp_cubic_sim_athlete_intercepts <- function(age_vec, 
+                                                  athlete_id,
+                                                  is_new_athlete,
+                                                  decathlon_data,
+                                                  stan_dir, iter = 2000){
+  sims_list <- list()
+  dec_events <- c("hundred_m", "long_jump", "shot_put",
+                  "high_jump", "four_hundred_m", "hurdles",
+                  "discus", "pole_vault", "javelin",
+                  "fifteen_hundred_m")
+  dec_age_vec <- c(decathlon_data$age)
+  age_mean <- mean(dec_age_vec)
+  age_sd <- sd(dec_age_vec)
+  
+  N_decathlon <- nrow(decathlon_data)
+  age_pred <- (age_vec- age_mean) / age_sd
+  N_pred <- length(age_pred)
+  
+  athlete_decathlon <- decathlon_data$athlete_id
+  age_decathlon <- (decathlon_data$age - age_mean) / age_sd
+  athlete_pred <- athlete_id # athlete id's
+  is_new_athlete <- is_new_athlete 
+  A_decathlon <- max(c(decathlon_data$athlete_id, athlete_pred))
+  
+  event = dec_events[1]
+  Y_decathlon <- decathlon_data[[event]]
+  data_list <- list(
+    N_decathlon  = N_decathlon,
+    age_pred = age_pred,
+    N_pred = N_pred,
+    A_decathlon = A_decathlon,
+    athlete_decathlon = athlete_decathlon,
+    Y_decathlon = Y_decathlon,
+    age_decathlon = age_decathlon,
+    athlete_pred = athlete_pred,
+    is_new_athlete = is_new_athlete
+  )
+  mod <- stan(paste0(stan_dir, "simple_cubic.stan"),
+              data = data_list, chains=4,
+              iter = iter)
+  mu <- (extract(mod)$mu_alpha)
+  alpha_decathlon <- extract(mod)$alpha_decathlon
+  beta1 <- (extract(mod)$beta1)
+  beta2 <- (extract(mod)$beta2)
+  beta3 <- (extract(mod)$beta3)
+  sigma <- (extract(mod)$sigma_decathlon)
+  sigma_mu <- extract(mod)$sigma_alpha_decathlon
+  sim <- list(mu = mu,
+              beta1 = beta1,
+              beta2 = beta2,
+              beta3 = beta3,
+              sigma = sigma,
+              sigma_mu = sigma_mu,
+              alpha_decathlon = alpha_decathlon)
+  sims_list[[paste0(event, "_sims")]] <- sim
+  for (i in 2:length(dec_events)) {
+    event = dec_events[i]
+    print(event)
+    N_prev_events <- i-1
+    Y_decathlon <- (decathlon_data[[dec_events[i]]])
+    Y_prev_events <- decathlon_data[dec_events[1:N_prev_events]]
+    data_list_compositional_cubic <- list(
+      N_decathlon  = N_decathlon,
+      N_pred = N_pred,
+      N_prev_events = dim(Y_prev_events)[2],
+      A_decathlon = A_decathlon,
+      athlete_decathlon = athlete_decathlon,
+      Y_decathlon = Y_decathlon,
+      Y_prev_events = Y_prev_events,
+      age_decathlon = age_decathlon,
+      is_new_athlete = is_new_athlete,
+      athlete_pred = athlete_pred
+    )
+    
+    model <- stan(paste0(stan_dir, "compositional_cubic.stan"),
+                  data = data_list_compositional_cubic, chains=4,
+                  iter = iter)
+    
+    
+    # extract parameters
+    mu <- extract(model)$mu_alpha
+    alpha_decathlon <- extract(model)$alpha_decathlon
+    beta1 <- extract(model)$beta1
+    beta2 <- extract(model)$beta2
+    beta3 <- extract(model)$beta3
+    betaY <- extract(model)$betaY
+    sigma <- extract(model)$sigma_decathlon
+    sigma_mu <- extract(model)$sigma_athlete_decathlon # note: compositional model has athlete instead of alpha in the parameter name, but is same as sigma_alpha_decathlon from the simple model
+    sim <- list(mu = mu,
+                alpha_decathlon = alpha_decathlon,
+                beta1 = beta1,
+                beta2 = beta2,
+                beta3 = beta3,
+                sigma = sigma,
+                sigma_mu = sigma_mu,
+                betaY = betaY)
+    sims_list[[paste0(event, "_sims")]] <- sim
+  }
+  results <- list(sims_list = sims_list)
+  return(results)
+}
 
 get_comp_joint_cubic_sim <- function(age_vec, 
                                      athlete_id,
@@ -2051,3 +2153,593 @@ make_plots <- function(var, sim, dec_data, model_name){
 
 
 
+############################################################################################################################################################################################################################
+#function to calculate points from a pred_df. returns same df with calc_points column
+# add_pred_points <- function(pred_df){
+#   y_vars <-  c("hundred_m", "long_jump", "shot_put", "high_jump",
+#                "four_hundred_m", "hurdles", "discus",
+#                "pole_vault", "javelin", "fifteen_hundred_m")   
+#   track_events <- c("hundred_m",
+#                     "four_hundred_m", 
+#                     "hurdles", 
+#                     "fifteen_hundred_m",
+#                     "hundred_m_pred",
+#                     "four_hundred_m_pred", 
+#                     "hurdles_pred", 
+#                     "fifteen_hundred_m_pred")
+#   pred_df["index"] <- 1:nrow(pred_df)
+#   pred_df <- pred_df  %>%
+#     pivot_longer(cols = paste(y_vars, "_pred", sep = ""), 
+#                  names_to = "event", values_to = "P") %>%
+#     mutate(event_type = case_when(event %in% c(track_events) ~ "track",
+#                                   .default = "field"),
+#            A = case_when(event == "hundred_m_pred" ~ 25.4347,
+#                          event == "long_jump_pred" ~ 0.14354,
+#                          event == "shot_put_pred" ~ 51.39,
+#                          event == "high_jump_pred" ~ 0.8465,
+#                          event == "four_hundred_m_pred" ~ 1.53775,
+#                          event == "hurdles_pred" ~ 5.74352,
+#                          event == "discus_pred" ~ 12.91,
+#                          event == "pole_vault_pred" ~ 0.2797,
+#                          event == "javelin_pred" ~ 10.14,
+#                          event == "fifteen_hundred_m_pred" ~ 0.03768),
+#            B = case_when(event == "hundred_m_pred" ~ 18,
+#                          event == "long_jump_pred" ~ 220,
+#                          event == "shot_put_pred" ~ 1.5,
+#                          event == "high_jump_pred" ~ 75,
+#                          event == "four_hundred_m_pred" ~ 82,
+#                          event == "hurdles_pred" ~ 28.5,
+#                          event == "discus_pred" ~ 4,
+#                          event == "pole_vault_pred" ~ 100,
+#                          event == "javelin_pred" ~ 7,
+#                          event == "fifteen_hundred_m_pred" ~ 480),
+#            C = case_when(event == "hundred_m_pred" ~ 1.81,
+#                          event == "long_jump_pred" ~ 1.4,
+#                          event == "shot_put_pred" ~ 1.05,
+#                          event == "high_jump_pred" ~ 1.42,
+#                          event == "four_hundred_m_pred" ~ 1.81,
+#                          event == "hurdles_pred" ~ 1.92,
+#                          event == "discus_pred" ~ 1.1,
+#                          event == "pole_vault_pred" ~ 1.35,
+#                          event == "javelin_pred" ~ 1.08,
+#                          event == "fifteen_hundred_m_pred" ~ 1.85),
+#            calc_points = case_when(event_type == "track" ~ floor(A * ((B - P)^C)),
+#                                    event_type == "field" ~ floor(A * ((P - B)^C)))) %>%  
+#     select(index, event, calc_points, age, P) %>%
+#     group_by(index, age) %>%
+#     mutate(points_pred = sum(calc_points)) %>% 
+#     select(-calc_points) %>%
+#     pivot_wider(names_from = event, values_from = P)
+#   return(pred_df)
+# }
+
+
+# add_real_points <- function(orig_data) {
+#   data <- orig_data %>%
+#     mutate(index = row_number(),
+#            long_jump = long_jump * 100,
+#            high_jump = high_jump*100,
+#            pole_vault = pole_vault * 100) 
+#   data_long <- data %>%
+#     pivot_longer(cols =  c("hundred_m", 
+#                            "long_jump",
+#                            "shot_put",
+#                            "high_jump",
+#                            "four_hundred_m", 
+#                            "hurdles",
+#                            "discus",
+#                            "pole_vault",
+#                            "javelin",
+#                            "fifteen_hundred_m") , names_to = "event", values_to = "P") %>%
+#     mutate(event_type = case_when(event %in% c("hundred_m",
+#                                                "four_hundred_m", 
+#                                                "hurdles", 
+#                                                "fifteen_hundred_m") ~ "track",
+#                                   .default = "field"),
+#            A = case_when(event == "hundred_m" ~ 25.4347,
+#                          event == "long_jump" ~ 0.14354,
+#                          event == "shot_put" ~ 51.39,
+#                          event == "high_jump" ~ 0.8465,
+#                          event == "four_hundred_m" ~ 1.53775,
+#                          event == "hurdles" ~ 5.74352,
+#                          event == "discus" ~ 12.91,
+#                          event == "pole_vault" ~ 0.2797,
+#                          event == "javelin" ~ 10.14,
+#                          event == "fifteen_hundred_m" ~ 0.03768),
+#            B = case_when(event == "hundred_m" ~ 18,
+#                          event == "long_jump" ~ 220,
+#                          event == "shot_put" ~ 1.5,
+#                          event == "high_jump" ~ 75,
+#                          event == "four_hundred_m" ~ 82,
+#                          event == "hurdles" ~ 28.5,
+#                          event == "discus" ~ 4,
+#                          event == "pole_vault" ~ 100,
+#                          event == "javelin" ~ 7,
+#                          event == "fifteen_hundred_m" ~ 480),
+#            C = case_when(event == "hundred_m" ~ 1.81,
+#                          event == "long_jump" ~ 1.4,
+#                          event == "shot_put" ~ 1.05,
+#                          event == "high_jump" ~ 1.42,
+#                          event == "four_hundred_m" ~ 1.81,
+#                          event == "hurdles" ~ 1.92,
+#                          event == "discus" ~ 1.1,
+#                          event == "pole_vault" ~ 1.35,
+#                          event == "javelin" ~ 1.08,
+#                          event == "fifteen_hundred_m" ~ 1.85),
+#            calc_points = case_when(event_type == "track" ~ floor(A * ((B - P)^C)),
+#                                    event_type == "field" ~ floor(A * ((P - B)^C)))) %>%
+#     group_by(index)  %>%
+#     summarize(points = mean(points), calc_point = sum(calc_points))
+#   
+#   data[,"calc_point"] = data_long[,"calc_point"]
+#   return(data)
+# }
+
+
+################################################################################
+# functions to generate predictions given an age vector.
+################################################################################
+# use linear model without dependence between events. use age to predict hundred , age to predict long jump:
+
+# gen_pred_lr_simple <- function(data, age_vec){
+#   x_var <- c("age", "age2")
+#   mult_lin_reg_mod <- 
+#     rstan::stan_model(file = "/Users/paulnguyen/school/wisconsin/BART/research_repo/decathlon/stan/qr.stan")
+#   y_vars <-  c("hundred_m", "long_jump", "shot_put", "high_jump",
+#                "four_hundred_m", "hurdles", "discus",
+#                "pole_vault", "javelin", "fifteen_hundred_m")   
+#   data$age2 <- data$age^2
+#   data <- as.data.frame((data))
+#   N_samples <- 4000
+#   list_of_fits <- list()
+#   pred_df <- data.frame(age = age_vec) 
+#   
+#   for (y_var in y_vars) {
+#     new_data <- as.matrix(data.frame(age = age_vec, age2 = age_vec^2))
+#     
+#     args <- list(N = nrow(data), K = length(x_var), x = as.matrix(data[,x_var]),
+#                  y = data[,y_var], N_new = length(age_vec), 
+#                  x_new = new_data)
+#     fit <- 
+#       rstan::sampling(object = mult_lin_reg_mod,
+#                       data = args)
+#     
+#     list_of_fits <- list_of_fits %>%
+#       list.append(c(fit, y_var))
+#     
+#     pred_y_samples <- rstan::extract(object = fit, 
+#                                      pars = c("new_pred_y"))[[1]]
+#     
+#     
+#     pred_y_mean <- apply(pred_y_samples, MARGIN = 2, FUN = mean)
+# 
+#  
+#     pred_df[, paste(y_var , "_pred", sep = "")] <- pred_y_mean 
+#   }
+#   return(pred_df)
+# }
+# 
+# # use linear model with dependece between events. use age to predict hundred m, age + hundred m to predict long jump, ... 
+# gen_pred_lr_dep <- function(data, age_vec){
+#   x_var <- c("age", "age2")
+#   mult_lin_reg_mod <- 
+#     rstan::stan_model(file = "/Users/paulnguyen/school/wisconsin/BART/research_repo/decathlon/stan/qr.stan")
+#   y_vars <-  c("hundred_m", "long_jump", "shot_put", "high_jump",
+#                "four_hundred_m", "hurdles", "discus",
+#                "pole_vault", "javelin", "fifteen_hundred_m")   
+#   data$age2 <- data$age^2
+#   data <- as.data.frame((data))
+#   N_samples <- 4000
+#   list_of_fits <- list()
+#   pred_df <- data.frame(age = age_vec) 
+#   
+#   
+#   for (i in 1:length(y_vars)) {
+#     y_var = y_vars[i]
+#     print(y_var)
+#     if (i == 1) { # use only age and age2 to predict hundred_m
+#       x_var = x_var
+#       new_data <- as.matrix(data.frame(age = age_vec, age2 = age_vec^2))
+#     } else{
+#       x_var = c(x_var, y_vars[i-1])
+#     }
+#     args <- list(N = nrow(data), K = length(x_var), x = as.matrix(data[,x_var]),
+#                  y = data[,y_var], N_new = length(age_vec), 
+#                  x_new = new_data)
+#     fit <- 
+#       rstan::sampling(object = mult_lin_reg_mod,
+#                       data = args)
+#     list_of_fits <- list_of_fits %>%
+#       list.append(c(fit, y_var))
+#     pred_y_samples <- rstan::extract(object = fit, 
+#                                      pars = c("new_pred_y"))[[1]]
+#     
+#     pred_y_mean <- apply(pred_y_samples, MARGIN = 2, FUN = mean)
+#     
+#     pred_df[, paste(y_var , "_pred", sep = "")] <- pred_y_mean 
+#     if (i < length(y_vars)) {
+#       new_data <- cbind(new_data, pred_df[,i + 1])
+#     }
+#     
+#     
+#   }
+#   return(pred_df)
+# }
+# 
+# # use BART model without dependence between events. use age to predict hundred m, age to predict long jump, etc.
+# simple_bart_pred <- function(data, y_var, age_vec){
+#   mod_data <- data.frame(age = data$age)
+#   x1_mod <- wbart(x.train = mod_data,
+#                   y.train = (data[[y_var]]),
+#                   x.test = data.frame(x1 = age_vec))
+#   pred <- x1_mod$yhat.test.mean 
+#   return(pred)
+# }
+# 
+# gen_pred_bart_simple <- function(data, age_vec){
+#   pred_df <- data.frame(age = age_vec)
+#   y_vars <-  c("hundred_m", "long_jump", "shot_put", "high_jump",
+#                "four_hundred_m", "hurdles", "discus",
+#                "pole_vault", "javelin", "fifteen_hundred_m")   
+#   for (i in 1:length(y_vars)) {
+#     y_var = y_vars[i]
+#     pred_df[,paste(y_var, "_pred", sep = "")] = simple_bart_pred(data, y_var, age_vec)
+#   }
+#   return(pred_df)
+# }
+# 
+# 
+# gen_pred_bart_dep <- function(data, age_vec){
+#   pred_data <- data.frame(age = age_vec)
+#   # hundred m
+#   data_hundred_m <- data.frame(age = data$age) # could be age / whatever covariates later. 
+#   x1_mod <- wbart(x.train = data_hundred_m,
+#                   y.train = data$hundred_m,
+#                   x.test = data.frame(x1 = age_vec))
+#   pred_data$hundred_m_pred <- x1_mod$yhat.test.mean 
+#   # long jump
+#   data_long_jump <- data.frame(data[,c("age", "hundred_m")])
+#   x2_mod <- wbart(x.train = data_long_jump,
+#                   y.train = data$long_jump,
+#                   x.test = pred_data)
+#   
+#   pred_data$long_jump_pred <- x2_mod$yhat.test.mean 
+#   #shot put
+#   data_shot_put <-  data.frame(age = data$age,
+#                                hundred_m = data$hundred_m,
+#                                long_jump = data$long_jump)
+#   x3_mod <- wbart(x.train = data_shot_put,
+#                   y.train = data$shot_put,
+#                   x.test = pred_data)
+#   
+#   pred_data$shot_put_pred <- x3_mod$yhat.test.mean 
+#   # high jump
+#   data_high_jump <- data.frame(data_shot_put, data$shot_put)
+#   x4_mod <- wbart(x.train = data_high_jump,
+#                   y.train = data$high_jump,
+#                   x.test = pred_data)
+#   pred_data$high_jump_pred <- x4_mod$yhat.test.mean 
+#   # four hundred meter
+#   data_four_hundred_m <- data.frame(data_high_jump, data$high_jump)
+#   x5_mod <- wbart(x.train = data_four_hundred_m,
+#                   y.train = data$four_hundred_m,
+#                   x.test = pred_data)
+#   pred_data$four_hundred_m_pred <- x5_mod$yhat.test.mean 
+#   # hurdles
+#   data_hurdles <- data.frame(data_four_hundred_m, data$four_hundred_m)
+#   x6_mod <- wbart(x.train = data_hurdles,
+#                   y.train = data$hurdles,
+#                   x.test = pred_data)
+#   pred_data$hurdles_pred <- x6_mod$yhat.test.mean 
+#   # discus
+#   data_discus <- data.frame(data_hurdles, data$hurdles)
+#   x7_mod <- wbart(x.train = data_discus,
+#                   y.train = data$discus,
+#                   x.test = pred_data)
+#   pred_data$discus_pred <- x7_mod$yhat.test.mean 
+#   # pole vault
+#   data_pole_vault <- data.frame(data_discus, data$discus)
+#   x8_mod <- wbart(x.train = data_pole_vault,
+#                   y.train = data$pole_vault,
+#                   x.test = pred_data)
+#   pred_data$pole_vault_pred <- x8_mod$yhat.test.mean 
+#   # javelin
+#   data_javelin <- data.frame(data_pole_vault, data$pole_vault)
+#   x9_mod <- wbart(x.train = data_javelin,
+#                   y.train = data$javelin,
+#                   x.test = pred_data)
+#   pred_data$javelin_pred <- x9_mod$yhat.test.mean 
+#   # fifteen hundred meter
+#   data_fifteen_hundred_m <- data.frame(data_javelin, data$javelin)
+#   x10_mod <- wbart(x.train = data_fifteen_hundred_m,
+#                    y.train = data$fifteen_hundred_m,
+#                    x.test = pred_data)
+#   pred_data$fifteen_hundred_m_pred <- x10_mod$yhat.test.mean 
+#   return(pred_data)
+# }
+# 
+# ################################################################################
+# # functions to generate samples of data. make predictions, then add noise. 
+# ################################################################################
+# 
+# # function to generate samples of decathlon outcomes given training data and age vector using linear model without event dependence. use linear model to predict hundrem m given age. add noise to generate hundred m sample. use only age vector to repeat for long jump and other events. 
+# 
+# gen_sample_lr_simple <- function(data, age_vec){
+#   x_var <- c("age", "age2")
+#   mult_lin_reg_mod <- 
+#     rstan::stan_model(file = "/Users/paulnguyen/school/wisconsin/BART/research_repo/decathlon/stan/qr.stan")
+#   y_vars <-  c("hundred_m", "long_jump", "shot_put", "high_jump",
+#                "four_hundred_m", "hurdles", "discus",
+#                "pole_vault", "javelin", "fifteen_hundred_m")   
+#   data$age2 <- data$age^2
+#   data <- as.data.frame((data))
+#   N_samples <- 4000
+#   list_of_fits <- list()
+#   sample_df <- data.frame(age = age_vec) 
+#   for (y_var in y_vars) {
+#     print(y_var)
+#     new_data <- as.matrix(data.frame(age = age_vec, age2 = age_vec^2))
+#     
+#     args <- list(N = nrow(data), K = length(x_var), x = as.matrix(data[,x_var]),
+#                  y = data[,y_var], N_new = length(age_vec), 
+#                  x_new = new_data)
+#     fit <- 
+#       rstan::sampling(object = mult_lin_reg_mod,
+#                       data = args)
+#     list_of_fits <- list_of_fits %>%
+#       list.append(c(fit, y_var))
+#     
+#     pred_y_samples <- rstan::extract(object = fit, 
+#                                      pars = c("new_pred_y"))[[1]]
+#     sigma_samples <- rstan::extract(object = fit,
+#                                     pars = c("sigma"))[[1]]
+#     
+#     
+#     pred_y_mean <- apply(pred_y_samples, MARGIN = 2, FUN = mean)
+#     sigma_mean <- mean(sigma_samples)
+#     sample_df[, paste(y_var , "_pred", sep = "")] <- pred_y_mean + 
+#       rnorm(length(age_vec), 0, 1) * sigma_mean
+#   }
+#   return(sample_df)
+# }
+# 
+# # function to generate samples of decathlon outcomes given training data and age vector using linear model with dependence. use linear model to predict hundred m given age. add noise to generate hundred m sample. then use age vector and hundrem m sample to predict long jump. add noise to make long jump sample. repeat.
+# gen_sample_lr_dep <- function(data, age_vec){
+#   x_var <- c("age", "age2")
+#   mult_lin_reg_mod <- 
+#     rstan::stan_model(file = "/Users/paulnguyen/school/wisconsin/BART/research_repo/decathlon/stan/qr.stan")
+#   y_vars <-  c("hundred_m", "long_jump", "shot_put", "high_jump",
+#                "four_hundred_m", "hurdles", "discus",
+#                "pole_vault", "javelin", "fifteen_hundred_m")   
+#   data$age2 <- data$age^2
+#   data <- as.data.frame((data))
+#   N_samples <- 4000
+#   list_of_fits <- list()
+#   sample_df <- data.frame(age = age_vec) 
+#   
+#   
+#   for (i in 1:length(y_vars)) {
+#     y_var = y_vars[i]
+#     print(y_var)
+#     if (i == 1) { # use only age and age2 to predict hundred_m
+#       x_var = x_var
+#       new_data <- as.matrix(data.frame(age = age_vec, age2 = age_vec^2))
+#     } else{
+#       x_var = c(x_var, y_vars[i-1])
+#     }
+#     args <- list(N = nrow(data), K = length(x_var), x = as.matrix(data[,x_var]),
+#                  y = data[,y_var], N_new = length(age_vec), 
+#                  x_new = new_data)
+#     fit <- 
+#       rstan::sampling(object = mult_lin_reg_mod,
+#                       data = args)
+#     list_of_fits <- list_of_fits %>%
+#       list.append(c(fit, y_var))
+#     pred_y_samples <- rstan::extract(object = fit, 
+#                                      pars = c("new_pred_y"))[[1]]
+#     sigma_samples <- rstan::extract(object = fit,
+#                                     pars = c("sigma"))[[1]]
+#     
+#     pred_y_mean <- apply(pred_y_samples, MARGIN = 2, FUN = mean)
+#     sigma_mean <- mean(sigma_samples)
+#     
+#     sample_df[, paste(y_var , "_pred", sep = "")] <- pred_y_mean + 
+#       rnorm(length(age_vec), 0, 1) * sigma_mean
+#     if (i < length(y_vars)) {
+#       new_data <- cbind(new_data, sample_df[,i + 1])
+#     }
+#     
+#     
+#   }
+#   return(sample_df)
+# }
+# 
+# 
+# # use BART model without dependence between events. use age to predict hundred m, add noise to get hundred m sample. repeat for long jump, etc.
+# simple_bart_sample <- function(data, y_var, age_vec){
+#   mod_data <- data.frame(age = data$age)
+#   x1_mod <- wbart(x.train = mod_data,
+#                   y.train = (data[[y_var]]),
+#                   x.test = data.frame(x1 = age_vec))
+#   pred <- x1_mod$yhat.test.mean +
+#     (rnorm(length(age_vec), 0 , 1) * mean(x1_mod$sigma))
+#   return(pred)
+# }
+# 
+# 
+# gen_sample_bart_simple <- function(data, age_vec){
+#   sample_df <- data.frame(age = age_vec)
+#   y_vars <-  c("hundred_m", "long_jump", "shot_put", "high_jump",
+#                "four_hundred_m", "hurdles", "discus",
+#                "pole_vault", "javelin", "fifteen_hundred_m")   
+#   for (i in 1:length(y_vars)) {
+#     y_var = y_vars[i]
+#     sample_df[,paste(y_var, "_pred", sep = "")] = simple_bart_sample(data, y_var, age_vec)
+#   }
+#   return(sample_df)
+# }
+# 
+# # use BART model with dependence to make samples in the following procedure: use age to predict hundred m, add noise to get hundred m sample. use age and hundred m sample to predict long jump, etc.
+# gen_sample_bart_dep <- function(data, age_vec) {
+#   pred_data <- data.frame(age = age_vec)
+#   # hundred m
+#   data_hundred_m <- data.frame(age = data$age) # could be age / whatever covariates later. 
+#   x1_mod <- wbart(x.train = data_hundred_m,
+#                   y.train = data$hundred_m,
+#                   x.test = data.frame(x1 = age_vec))
+#   pred_data$hundred_m_pred <- x1_mod$yhat.test.mean +
+#     (rnorm(length(age_vec), 0 , 1) * mean(x1_mod$sigma))
+#   # long jump
+#   data_long_jump <- data.frame(data[,c("age", "hundred_m")])
+#   x2_mod <- wbart(x.train = data_long_jump,
+#                   y.train = data$long_jump,
+#                   x.test = pred_data)
+#   
+#   pred_data$long_jump_pred <- x2_mod$yhat.test.mean +
+#     (rnorm(length(age_vec), 0 , 1) * mean(x2_mod$sigma))
+#   #shot put
+#   data_shot_put <-  data.frame(age = data$age,
+#                                hundred_m = data$hundred_m,
+#                                long_jump = data$long_jump)
+#   x3_mod <- wbart(x.train = data_shot_put,
+#                   y.train = data$shot_put,
+#                   x.test = pred_data)
+#   
+#   pred_data$shot_put_pred <- x3_mod$yhat.test.mean +
+#     (rnorm(length(age_vec), 0 , 1) * mean(x3_mod$sigma))
+#   # high jump
+#   data_high_jump <- data.frame(data_shot_put, data$shot_put)
+#   x4_mod <- wbart(x.train = data_high_jump,
+#                   y.train = data$high_jump,
+#                   x.test = pred_data)
+#   pred_data$high_jump_pred <- x4_mod$yhat.test.mean +
+#     (rnorm(length(age_vec), 0 , 1) * mean(x4_mod$sigma))
+#   # four hundred meter
+#   data_four_hundred_m <- data.frame(data_high_jump, data$high_jump)
+#   x5_mod <- wbart(x.train = data_four_hundred_m,
+#                   y.train = data$four_hundred_m,
+#                   x.test = pred_data)
+#   pred_data$four_hundred_m_pred <- x5_mod$yhat.test.mean +
+#     (rnorm(length(age_vec), 0 , 1) * mean(x5_mod$sigma))
+#   # hurdles
+#   data_hurdles <- data.frame(data_four_hundred_m, data$four_hundred_m)
+#   x6_mod <- wbart(x.train = data_hurdles,
+#                   y.train = data$hurdles,
+#                   x.test = pred_data)
+#   pred_data$hurdles_pred <- x6_mod$yhat.test.mean +
+#     (rnorm(length(age_vec), 0 , 1) * mean(x6_mod$sigma))
+#   # discus
+#   data_discus <- data.frame(data_hurdles, data$hurdles)
+#   x7_mod <- wbart(x.train = data_discus,
+#                   y.train = data$discus,
+#                   x.test = pred_data)
+#   pred_data$discus_pred <- x7_mod$yhat.test.mean +
+#     (rnorm(length(age_vec), 0 , 1) * mean(x7_mod$sigma))
+#   # pole vault
+#   data_pole_vault <- data.frame(data_discus, data$discus)
+#   x8_mod <- wbart(x.train = data_pole_vault,
+#                   y.train = data$pole_vault,
+#                   x.test = pred_data)
+#   pred_data$pole_vault_pred <- x8_mod$yhat.test.mean +
+#     (rnorm(length(age_vec), 0 , 1) * mean(x8_mod$sigma))
+#   # javelin
+#   data_javelin <- data.frame(data_pole_vault, data$pole_vault)
+#   x9_mod <- wbart(x.train = data_javelin,
+#                   y.train = data$javelin,
+#                   x.test = pred_data)
+#   pred_data$javelin_pred <- x9_mod$yhat.test.mean +
+#     (rnorm(age_vec, 0 , 1) * mean(x9_mod$sigma))
+#   # fifteen hundred meter
+#   data_fifteen_hundred_m <- data.frame(data_javelin, data$javelin)
+#   x10_mod <- wbart(x.train = data_fifteen_hundred_m,
+#                    y.train = data$fifteen_hundred_m,
+#                    x.test = pred_data)
+#   pred_data$fifteen_hundred_m_pred <- x10_mod$yhat.test.mean +
+#     (rnorm(length(age_vec)) * mean(x10_mod$sigma))
+#   return(pred_data)
+# }
+# 
+# 
+# gen_sample_brms <- function(data, age_vec) {
+#   sample_df <- data.frame(age = age_vec)
+#   y_vars <-  c("hundred_m", "long_jump", "shot_put", "high_jump",
+#                "four_hundred_m", "hurdles", "discus",
+#                "pole_vault", "javelin", "fifteen_hundred_m")  
+#   data$age2 <- data$age^2
+#   data$age3 <- data$age^3
+#   data <- as.data.frame((data))
+#   x_var <- c("age", "age2", "age3")
+#   
+#   prior <- c(set_prior(prior = 'normal(0,4)', class='b', coef='age'), 
+#              set_prior(prior = 'normal(0,3)', class='b', coef='age2'),
+#              set_prior(prior = 'normal(0,2)', class='b', coef='age3'),
+#              # global slope belongs to a normal distribution centered around 0
+#              set_prior(prior = 'normal(0,6)', class='Intercept', coef=''))
+#   # global intercept
+#   list_of_fits <- list()
+#   sample_df <- data.frame(age = age_vec,
+#                           age2 = age_vec^2,
+#                           age3 = age_vec^3) 
+#   
+#   for (i in 1:length(y_vars)) {
+#     y_var = y_vars[i]
+#     print(y_var)
+#     if (i == 1) { # use only age and age2 and age 3 to predict hundred_m
+#       x_var = x_var
+#     } else{
+#       x_var = c(x_var, y_vars[i-1])
+#     }
+#     model_data <- data %>%
+#       select(all_of(y_var),
+#              all_of(x_var))
+#     f <- as.formula(paste(paste(y_var), paste(x_var, collapse = " + "),
+#                           sep = " ~ "))
+#     score_model <- brm(f,
+#                        data = data,
+#                        family = gaussian(),
+#                        prior = prior,
+#                        iter = 10000)
+#     prediction_df <- data.frame(predict(score_model, newdata = sample_df))
+#     simulated_df <- data.frame( prediction_df[,1] + rnorm(nrow(prediction_df), 
+#                                                           mean = 0,
+#                                                           sd = prediction_df[,2])) 
+#     colnames(simulated_df) <- y_var
+#     sample_df <- cbind(sample_df, simulated_df)
+#   }
+#   return(sample_df)
+# }
+# 
+# 
+# ################################################################################
+# ## functions to analyze results
+# ################################################################################
+# # function to bind performance data vs predicted data
+# bind_df <- function(data, new_data){
+#   data["index"] = 1:nrow(data)
+#   merge_data <- left_join(data, new_data)
+#   return(merge_data)
+#   
+# }
+# 
+# # function to calculate rmse from actual vs predicted performance data
+# get_rmse <- function(data, new_data, y_var){
+#   y_var <- sym(y_var)
+#   y_var_pred <- sym(paste(y_var, "_pred", sep = ""))
+#   rmse <- bind_df(data, new_data) %>%
+#     select(!!y_var, !!y_var_pred) %>%
+#     summarize(rmse = sqrt(mean((!!y_var - !!y_var_pred)^2))) %>% 
+#     pull()
+#   
+#   return(rmse)
+# }
+# 
+# # function to plot actual performance data vs predicted performance data
+# compare_perf_plot <- function(data, new_data, y_var){
+#   y_var <- sym(y_var)
+#   y_var_pred <- sym(paste(y_var, "_pred", sep = ""))
+#   new_df <- bind_df(data, new_data)
+#   new_plot <- ggplot(data = new_df, 
+#                      mapping = aes(x = !!y_var, y = !!y_var_pred)) + 
+#     geom_point()
+#   return(new_plot)
+# }
