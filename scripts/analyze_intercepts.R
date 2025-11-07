@@ -5,15 +5,15 @@ library(cowplot)
 library(ggrepel)
 library(knitr)
 
-study = "../study"
-data_dir = "../data/"
-script_dir = "../study/"
-stan_dir = "../stan_mods/"
+study = "study"
+data_dir = "data/"
+script_dir = "study/"
+stan_dir = "stan_mods/"
 
 
 source(paste0(script_dir, "decathlon_funs.R"))
 
-# sim <- readRDS("../../results/intercepts_sim.RData")
+sim <- readRDS("../results/intercepts_sim.RData")
 
 dec_events <- c("hundred_m", "long_jump", "shot_put",
                 "high_jump", "four_hundred_m", "hurdles",
@@ -450,8 +450,8 @@ ggplot(data = total_quantile_df,
   scale_colour_brewer(type = "qual",
                       palette = 'Dark2') +
   theme(legend.position = "none")
-# ggsave("../../writing/decathlon_manu/figures/intercepts_graph.png", width = 6, height = 4,
-#        units = "in")
+ggsave("../writing/decathlon_manu/figures/intercepts_graph.png", width = 6, height = 4,
+       units = "in")
 
 # function to get simulated performance using sim -------------------------
 

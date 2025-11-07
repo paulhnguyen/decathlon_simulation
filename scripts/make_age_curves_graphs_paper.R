@@ -13,10 +13,10 @@ library(forcats)
 library(knitr)
 
 
-study = "../study"
-data_dir = "../data/"
-script_dir = "../study/"
-stan_dir = "../stan_mods/"
+study = "study"
+data_dir = "data/"
+script_dir = "study/"
+stan_dir = "stan_mods/"
 
 source(paste0(script_dir, "decathlon_funs.R"))
 
@@ -80,9 +80,9 @@ event_sums <- get_event_sums_df(online_data_filter)
 # points age curve --------------------------------------------------------
 
 # read in age curve. simulation from code_to_generate_sims.R
-# baseline_sim <- read_rds(file = "../../results/baseline_sim_for_select_athletes.RData")
-# simple_sim <- read_rds(file = "../../results/simple_sim_for_select_athletes.RData")
-# comp_sim <- read_rds(file = "../../results/comp_sim_for_select_athletes.RData")
+baseline_sim <- read_rds(file = "../results/baseline_sim_for_select_athletes.RData")
+simple_sim <- read_rds(file = "../results/simple_sim_for_select_athletes.RData")
+comp_sim <- read_rds(file = "../results/comp_sim_for_select_athletes.RData")
 baseline_sim_ribbon_df <- data.frame(quant2.5 = apply((baseline_sim$post_sim), MARGIN = 2, 
                                                   function(x) quantile(x,.025)),
                                      quant97.5 = apply((baseline_sim$post_sim), MARGIN = 2, 
